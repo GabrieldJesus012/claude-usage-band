@@ -1,0 +1,10 @@
+{
+  "name": "usage-band",
+  "version": "0.1.0",
+  "description": "Mesaj kutusunun üstünde 5h/7d limitleri, token toplamları ve oturum maliyeti şeridi",
+  "author": {
+    "name": "GabrieldJesus012",
+    "url": "https://github.com/GabrieldJesus012"
+  },
+  "types": "./types/index.d.ts"
+}

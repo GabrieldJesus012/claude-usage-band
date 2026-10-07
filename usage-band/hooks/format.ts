@@ -169,3 +169,17 @@ export function summaryLine(limits: UsageLimits | null, tokens: UsageTokens | nu
   if (limits?.costUsd != null) parts.push(`custo ${formatUsd(limits.costUsd)}`)
   return parts.length > 0 ? parts.join(' · ') : 'Ainda não há dados de uso.'
 }
+
+/** Linha curta para a linha de status: 5h, 7d e custo (sessões sem tela para a faixa). */
+export function statusText(limits: UsageLimits | null, now: number): string | undefined {
+  const parts: string[] = []
+  const win = (label: string, w: UsageWindow | null | undefined) => {
+    if (!w) return
+    const left = w.resetsAt === null ? '' : ` ${formatLeft(w.resetsAt - now)}`
+    parts.push(`${label} ${formatPercent(w.percent)}${left}`)
+  }
+  win('5h', limits?.fiveHour)
+  win('7d', limits?.sevenDay)
+  if (limits?.costUsd != null) parts.push(formatUsd(limits.costUsd))
+  return parts.length > 0 ? parts.join(' · ') : undefined
+}

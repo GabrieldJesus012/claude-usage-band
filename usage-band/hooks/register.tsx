@@ -2,7 +2,7 @@ import { atom, read, update } from 'claude-code'
 import type { EngineInterface, Register, SessionCost, SessionContextUsage, SessionRateLimit } from 'claude-code'
 
 import type { UsageLimits, UsageScan, UsageTokens, UsageWindow } from '../types'
-import { BAR_COLORS, buildPills, levelOf, formatPercent, summaryLine } from './format'
+import { BAR_COLORS, buildPills, levelOf, formatPercent, statusText, summaryLine } from './format'
 import type { Pill, PillKind } from './format'
 import { pillSvg } from './svg'
 
@@ -141,6 +141,17 @@ async function refreshAll($: EngineInterface, force = false): Promise<void> {
   const usage = await $.session.usage()
   await update($, limitsAtom, () => toLimits(usage))
   await refreshTokens($, force)
+  await showStatus($)
+}
+
+/** Sem tela para desenhar a faixa (sessão na nuvem), fixa um resumo na linha de status. */
+async function showStatus($: EngineInterface): Promise<void> {
+  try {
+    const hasSurface = (await $.session.surfaces()).length > 0
+    $.ui.status(hasSurface ? undefined : statusText(await read($, limitsAtom), await read($, nowAtom)))
+  } catch {
+    // a linha de status é um extra: sem ela a faixa e o /kullanim seguem iguais
+  }
 }
 
 export const register: Register = on => {

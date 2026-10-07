@@ -29,11 +29,18 @@ const SCRIPT = {
   subagents: 0,
 }
 
-function world(on: On, opts: { scriptWorks: boolean }) {
+const statuses: (string | undefined)[] = []
+
+function world(on: On, opts: { scriptWorks: boolean; surfaces?: ('terminal' | 'desktop')[] }) {
   mock.clock(on, { now: T0 })
   on('session.usage', () => ({ value: USAGE }))
   on('session.id', () => ({ value: 's1' }))
   on('fs.stat', () => ({ value: { kind: 'file' as const, size: 1, mtimeMs: 1, isLink: false } }))
+  on('session.surfaces', () => ({ value: opts.surfaces ?? ['desktop' as const] }))
+  on('ui.status', (_$, e) => {
+    statuses.push(e.text)
+    return { value: undefined }
+  })
   on('ui.render', ($, e) => {
     const { Box } = $.ui.resolve(e)
     return <Box />
@@ -139,4 +146,18 @@ test('gizle oculta e goster mostra', async ($, on) => {
   await $.command.run({ ...RUN, args: 'goster' })
   const shown = await $.ui.mount({ ...BAND, surface: 'desktop' })
   expect(await shown.findAll({ type: 'Svg' })).toHaveLength(6)
+})
+
+test('sem tela, o resumo vai para a linha de status; com tela, ela é limpa', async ($, on) => {
+  world(on, { scriptWorks: true, surfaces: [] })
+  statuses.length = 0
+  await $.command.run({ ...RUN, args: '' })
+  expect(statuses.at(-1)).toBe('5h 20% 2h 40m · 7d 58% 1d 7h · $4.32')
+})
+
+test('com tela a linha de status fica vazia', async ($, on) => {
+  world(on, { scriptWorks: true, surfaces: ['desktop'] })
+  statuses.length = 0
+  await $.command.run({ ...RUN, args: '' })
+  expect(statuses.at(-1)).toBeUndefined()
 })
